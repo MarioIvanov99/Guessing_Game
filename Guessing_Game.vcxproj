@@ -128,7 +128,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Guesser.cpp" />
     <ClCompile Include="Guessing_Game.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Guesser.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
