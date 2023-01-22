@@ -14,38 +14,36 @@
 #include "stb_image_resize.h"
 
 std::vector<float> vertexVector;
+bool held;
+float x, y;
 
-// Define vertices
-float vertices[] = {
-   -0.5f,  0.5f, 0.0f,
-   -0.5f, -0.5f, 0.0f,
-    0.5f, -0.5f, 0.0f,
+void cursor_position_callback(GLFWwindow* window, double xpos, double ypos)
+{
+    int width, height;
+    glfwGetWindowSize(window, &width, &height);
 
-    0.5f,  0.5f, 0.0f,
-   -0.5f,  0.5f, 0.0f,
-    0.5f, -0.5f, 0.0f
-};
+    x = (2.0f * xpos) / width - 1.0f;
+    y = 1.0f - (2.0f * ypos) / height;
+}
 
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
-    double xpos, ypos;
+    /*double xpos, ypos;
     int width, height;
 
     glfwGetCursorPos(window, &xpos, &ypos);
     glfwGetWindowSize(window, &width, &height);
 
-    float x = (2.0f * xpos) / width - 1.0f;
-    float y = 1.0f - (2.0f * ypos) / height;
+    x = (2.0f * xpos) / width - 1.0f;
+    y = 1.0f - (2.0f * ypos) / height;*/
 
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
         std::cout << "xpos: " << x << " ypos: " << y << std::endl;
     if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
-        for (int i = 0; i < 18; i++) {
-
-            vertexVector.push_back(vertices[i]);
-
-        }
+        held = true;
     }
+    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE)
+        held = false;
 
 }
 
@@ -65,6 +63,7 @@ int main()
 
     glfwMakeContextCurrent(window);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
+    glfwSetCursorPosCallback(window, cursor_position_callback);
 
     // Initialize GLAD
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
@@ -101,23 +100,54 @@ int main()
 
     shader.UseShader();
 
+    double currentTime = glfwGetTime(); // Frame limiter
+    double lastTime = currentTime;
+
     while (!glfwWindowShouldClose(window)) {
 
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        currentTime = glfwGetTime();
 
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertexVector.size(), vertexVector.data(), GL_STATIC_DRAW);
+        if (currentTime - lastTime >= 1.0 / 45)
+        {
+            lastTime = currentTime;
 
-        glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
-        glBindVertexArray(0);
+            glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+            glClear(GL_COLOR_BUFFER_BIT);
 
-        // Swap front and back buffers
-        glfwSwapBuffers(window);
+            if (held) {
+                std::cout << x << std::endl;
+                float vertices[] = {
+               x - 0.075f,  y + 0.075f, 0.0f,
+               x - 0.075f, y - 0.075f, 0.0f,
+                x + 0.075f, y - 0.075f, 0.0f,
 
-        // Poll for and process events
-        glfwPollEvents();
+                x + 0.075f,  y + 0.075f, 0.0f,
+               x - 0.075f,  y + 0.075f, 0.0f,
+                x + 0.075f, y - 0.075f, 0.0f
+                };
+
+                for (int i = 0; i < 18; i++) {
+
+                    vertexVector.push_back(vertices[i]);
+
+                }
+            }
+
+            glBindBuffer(GL_ARRAY_BUFFER, VBO);
+            glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertexVector.size(), vertexVector.data(), GL_DYNAMIC_DRAW);
+
+            glBindVertexArray(VAO);
+            glDrawArrays(GL_TRIANGLES, 0, vertexVector.size() / 3);
+            glBindVertexArray(0);
+
+            // Swap front and back buffers
+            glfwSwapBuffers(window);
+
+            // Poll for and process events
+            glfwPollEvents();
+        }
+
+        
     }
 
     unsigned char* pixels = new unsigned char[560 * 560];
