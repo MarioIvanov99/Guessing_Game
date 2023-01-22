@@ -1,16 +1,30 @@
-//#include "Guesser.h"
 #pragma once
 #define _CRT_SECURE_NO_WARNINGS
+//#include "Guesser.h"
 #include "Shader.h"
 #include <iostream>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <vector>
 //#define _CRT_SECURE_NO_WARNINGS
 //#define STBI_MSC_SECURE_CRT
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 #define STB_IMAGE_RESIZE_IMPLEMENTATION
 #include "stb_image_resize.h"
+
+std::vector<float> vertexVector;
+
+// Define vertices
+float vertices[] = {
+   -0.5f,  0.5f, 0.0f,
+   -0.5f, -0.5f, 0.0f,
+    0.5f, -0.5f, 0.0f,
+
+    0.5f,  0.5f, 0.0f,
+   -0.5f,  0.5f, 0.0f,
+    0.5f, -0.5f, 0.0f
+};
 
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
@@ -25,6 +39,13 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
         std::cout << "xpos: " << x << " ypos: " << y << std::endl;
+    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
+        for (int i = 0; i < 18; i++) {
+
+            vertexVector.push_back(vertices[i]);
+
+        }
+    }
 
 }
 
@@ -55,19 +76,17 @@ int main()
 
     Shader shader("shader.vert", "shader.frag");
 
-    // Define vertices
-    float vertices[] = {
-       -0.5f, -0.5f, 0.0f,    
-       -0.5f,  0.5f, 0.0f,   
-        0.5f, -0.5f, 0.0f,    
-        0.5f,  0.5f, 0.0f      
-    };
+    //for (int i = 0; i < 18; i++) {
+
+        //vertexVector.push_back(vertices[i]);
+
+    //}
 
     // Create VBO
     GLuint VBO;
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float)*vertexVector.size(), vertexVector.data(), GL_STATIC_DRAW);
 
     // Create VAO
     GLuint VAO;
@@ -87,8 +106,11 @@ int main()
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertexVector.size(), vertexVector.data(), GL_STATIC_DRAW);
+
         glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
         glBindVertexArray(0);
 
         // Swap front and back buffers
@@ -104,7 +126,27 @@ int main()
 
     unsigned char* resized_pixels = new unsigned char[28 * 28];
     stbir_resize_uint8(pixels, 560, 560, 0, resized_pixels, 28, 28, 0, 1);
-    stbi_write_png("screenshot.png", 28, 28, 1, resized_pixels, 28);
+    stbi_write_png("screenshot.png", 28, 28, 1, resized_pixels, 28); //Used for testing
+
+    //mat dataset(28 * 28, 1);
+    //for (uword i = 0; i < 28 * 28; i++) {
+
+        //dataset(i, 0) = resized_pixels[i];
+
+    //}
+    //int counter = 0;
+    for (int i = 27; i >= 0; i--) {
+        for (int j = 0; j < 28; j++) {
+            if (resized_pixels[i * 28 + j] != 0) {
+                std::cout << "1";
+            }
+            else {
+                std::cout << "0";
+            }
+        }
+        std::cout << std::endl;
+    }
+
 
     delete[] pixels;
     delete[] resized_pixels;
