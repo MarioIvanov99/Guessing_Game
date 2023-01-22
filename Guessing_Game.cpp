@@ -1,6 +1,6 @@
 #pragma once
 #define _CRT_SECURE_NO_WARNINGS
-//#include "Guesser.h"
+#include "Guesser.h"
 #include "Shader.h"
 #include <iostream>
 #include <glad/glad.h>
@@ -13,9 +13,11 @@
 #define STB_IMAGE_RESIZE_IMPLEMENTATION
 #include "stb_image_resize.h"
 
-std::vector<float> vertexVector;
+std::vector<float> vertexVector; //Vertices
 bool held;
 float x, y;
+mat dataset(784, 1);
+Guesser prediction;
 
 void cursor_position_callback(GLFWwindow* window, double xpos, double ypos)
 {
@@ -28,24 +30,41 @@ void cursor_position_callback(GLFWwindow* window, double xpos, double ypos)
 
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
-    /*double xpos, ypos;
-    int width, height;
-
-    glfwGetCursorPos(window, &xpos, &ypos);
-    glfwGetWindowSize(window, &width, &height);
-
-    x = (2.0f * xpos) / width - 1.0f;
-    y = 1.0f - (2.0f * ypos) / height;*/
-
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
-        std::cout << "xpos: " << x << " ypos: " << y << std::endl;
-    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
         held = true;
-    }
-    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE)
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
         held = false;
+    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
+        vertexVector.clear();
 
 }
+
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+
+    if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
+        unsigned char* pixels = new unsigned char[560 * 560];
+        glReadPixels(0, 0, 560, 560, GL_RED, GL_UNSIGNED_BYTE, pixels);
+        stbi_flip_vertically_on_write(true);
+
+        unsigned char* resized_pixels = new unsigned char[28 * 28];
+        stbir_resize_uint8(pixels, 560, 560, 0, resized_pixels, 28, 28, 0, 1);
+        stbi_write_png("screenshot.png", 28, 28, 1, resized_pixels, 28); //Used for testing
+
+        for (int i = 27; i >= 0; i--) {
+            for (int j = 0; j < 28; j++) {
+                dataset((i * 28 + j), 0) = resized_pixels[i * 28 + j];
+            }
+            std::cout << std::endl;
+        }
+
+        prediction.predict(dataset);
+        delete[] pixels;
+        delete[] resized_pixels;
+    }
+    
+}
+
+
 
 int main()
 {
@@ -64,6 +83,7 @@ int main()
     glfwMakeContextCurrent(window);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
     glfwSetCursorPosCallback(window, cursor_position_callback);
+    glfwSetKeyCallback(window, key_callback);
 
     // Initialize GLAD
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
@@ -74,12 +94,6 @@ int main()
     glViewport(0, 0, 560, 560);
 
     Shader shader("shader.vert", "shader.frag");
-
-    //for (int i = 0; i < 18; i++) {
-
-        //vertexVector.push_back(vertices[i]);
-
-    //}
 
     // Create VBO
     GLuint VBO;
@@ -107,7 +121,7 @@ int main()
 
         currentTime = glfwGetTime();
 
-        if (currentTime - lastTime >= 1.0 / 45)
+        if (currentTime - lastTime >= 1.0 / 60) // 60 fps
         {
             lastTime = currentTime;
 
@@ -115,7 +129,7 @@ int main()
             glClear(GL_COLOR_BUFFER_BIT);
 
             if (held) {
-                std::cout << x << std::endl;
+              
                 float vertices[] = {
                x - 0.075f,  y + 0.075f, 0.0f,
                x - 0.075f, y - 0.075f, 0.0f,
@@ -150,24 +164,9 @@ int main()
         
     }
 
-    unsigned char* pixels = new unsigned char[560 * 560];
-    glReadPixels(0, 0, 560, 560, GL_RED, GL_UNSIGNED_BYTE, pixels);
-    stbi_flip_vertically_on_write(true);
-
-    unsigned char* resized_pixels = new unsigned char[28 * 28];
-    stbir_resize_uint8(pixels, 560, 560, 0, resized_pixels, 28, 28, 0, 1);
-    stbi_write_png("screenshot.png", 28, 28, 1, resized_pixels, 28); //Used for testing
-
-    //mat dataset(28 * 28, 1);
-    //for (uword i = 0; i < 28 * 28; i++) {
-
-        //dataset(i, 0) = resized_pixels[i];
-
-    //}
-    //int counter = 0;
     for (int i = 27; i >= 0; i--) {
         for (int j = 0; j < 28; j++) {
-            if (resized_pixels[i * 28 + j] != 0) {
+            if (dataset((i * 28 + j), 0) != 0) {
                 std::cout << "1";
             }
             else {
@@ -176,10 +175,6 @@ int main()
         }
         std::cout << std::endl;
     }
-
-
-    delete[] pixels;
-    delete[] resized_pixels;
 
     // Clean up
     glDeleteVertexArrays(1, &VAO);

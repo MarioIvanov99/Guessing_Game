@@ -19,12 +19,10 @@ void Guesser::predict(mat dataset) {
 
     Row<size_t> predLabels = getLabels(predOut);
 
-    cout << "Predicting on test set..." << endl;
-
     model.Predict(dataset, predOut); //Get prediction from one image
     predLabels = getLabels(predOut);
 
     for (int i = 0; i < predLabels.n_elem; i++) {
-        cout << "Label [" << i << "]: " << predLabels[i] << endl;
+        cout << "The number is... " << predLabels[i] << endl;
     }
 }
