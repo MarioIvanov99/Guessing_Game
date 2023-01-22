@@ -130,9 +130,11 @@
   <ItemGroup>
     <ClCompile Include="Guesser.cpp" />
     <ClCompile Include="Guessing_Game.cpp" />
+    <ClCompile Include="Shader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Guesser.h" />
+    <ClInclude Include="Shader.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
